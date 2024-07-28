@@ -1,0 +1,237 @@
+var centerX = getWidth() / 2;
+var centerY = getHeight() / 2;
+
+// shuffles a given array and replaces itself with it. 
+
+function shuffle(array) {
+    let cur = array.length, inx;
+    while (cur != 0) {
+        inx = Math.floor(Math.random() * cur);
+        cur--;
+        [array[cur], array[inx]] = [array[inx], array[cur]];
+    }
+    return array;
+}
+
+// user chooses the level of difficulty when the game begins. the time between
+// the letters being displayed decreases with each level higher.
+
+var time2;
+
+function speed (){
+var level = readInt("What speed do you want? (lowest to highest) 1, 2, or 3?");
+    while (level < 1 || level > 3) {
+        var level = readInt("Your only options are 1, 2, or 3. Try again!");
+    }
+    if(level == 1) {
+        var time2 = 1000;
+        window.time = time2;
+    } else if (level == 2) {
+        var time2 = 400;
+        window.time = time2;
+    } else{
+        var time2 = 100; 
+        window.time = time2;
+    }
+    println(time);
+}
+
+// draws background with a border.
+function drawBackground(color){
+    rect(getWidth(), getHeight(), color, 0, 0);
+    rect(getWidth()-50, getHeight()-50, "#FFFFFF", 25, 25);
+}
+
+
+// full alphabet in order.
+var alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", 
+"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+
+// shuffle alphabet, the last 8 elements are put in the letters list.
+// the last element in alphabet after the 8 elements are taken out will be the
+// correct answer choice at the end (the letter that was not displayed).
+// the letters list will be the letters that will be displayed.
+// the alphabet list has all the leftovers.
+
+shuffle(alphabet);
+var letter1 = alphabet.pop();
+var letter2 = alphabet.pop();
+var letter3 = alphabet.pop();
+var letter4 = alphabet.pop();
+var letter5 = alphabet.pop();
+var letter6 = alphabet.pop();
+var letter7 = alphabet.pop();
+var letter8 = alphabet.pop();
+var missing = alphabet.pop();
+
+var letters = [];
+letters.push(letter1);
+letters.push(letter2);
+letters.push(letter3);
+letters.push(letter4);
+letters.push(letter5);
+letters.push(letter6);
+letters.push(letter7);
+letters.push(letter8);
+shuffle(letters);
+
+var choices = [];
+choices.push(letters[0]);
+choices.push(letters[1]);
+choices.push(missing);
+
+// randomize the order of the choices so the correct answer will not always be in the same spot.
+shuffle(choices);
+
+// smart anaya still wow
+
+// randomize the letters list again so that the 2 incorrect choices are not the first 2
+// letters shown in the set
+shuffle(letters);
+
+
+// the index of missing (+ 1) will be the answer the user need to enter at the end
+var ansInx = choices.indexOf(missing);
+
+
+// instructions. player is asked to choose a speed. player can press spacebar to start the game.
+function start(){
+    drawBackground("#93DAA2");
+    text("letter memory", "bold 23pt Verdana", "#93DAA2", centerX, centerY-115);
+    text("game instructions:", "bold 23pt Verdana", "#93DAA2", centerX, centerY-79);
+    text("a set of 8 letters will flash on your", "14pt Verdana", "#93DAA2", centerX, centerY-25);
+    text("screen, the speed of which you can", "14pt Verdana", "#93DAA2", centerX, centerY);
+    text("choose now. after the letters have", "14pt Verdana", "#93DAA2", centerX, centerY+25);
+    text("flashed, you will need to choose", "14pt Verdana", "#93DAA2", centerX, centerY+50);
+    text("which of the given answer choices", "14pt Verdana", "#93DAA2", centerX, centerY+75);
+    text("was NOT in the set of letters shown!", "14pt Verdana", "#93DAA2", centerX, centerY+100);
+    text("press SPACE to begin!", "bold 18pt Verdana", "#93DAA2", centerX, centerY+155);
+    setTimeout(function() {
+        speed();
+        }, 500)
+    keyDownMethod(keyDown);
+}
+
+// player can trigger lettersTime function with spacebar and start the game.
+
+function keyDown(e){
+    if(e.keyCode == Keyboard.SPACE){ 
+        lettersTime();
+        setTimeout(choosingScreen, time * 8);
+    }
+}
+
+
+// makes all of the letters in the letters list flash on the screen in the speed
+// the player chose.
+
+function lettersTime(){
+    drawBackground("#93DAA2");
+    var sec = 0;
+    for (sec=0; sec <= 7; sec++){
+        timer(sec);
+    }
+}
+
+
+function timer(sec) {
+    setTimeout(function() {
+      circle(75, Color.WHITE, centerX, centerY);
+      text(letters[sec], "75pt Verdana", Color.BLACK, centerX, centerY+25);
+  }, time * sec);
+}
+
+
+// screen player sees while they need to choose. triggers function that lets 
+// them type answer, 500 ms after
+
+function choosingScreen(){
+    mouseDragMethod();
+    mouseClickMethod();
+    drawBackground("#93DAA2");
+    text("which of these letters", "22pt Verdana", "#93DAA2", centerX, centerY-85);
+    text("did you NOT see?", "22pt Verdana", "#93DAA2", centerX, centerY-50);
+    text("1", "23pt Verdana", "#93DAA2", centerX-100, centerY+110);
+    text("2", "23pt Verdana", "#93DAA2", centerX, centerY+110);
+    text("3", "23pt Verdana", "#93DAA2", centerX+100, centerY+110);
+    text(choices[0], "50pt Verdana", Color.BLACK, centerX-100, centerY+65);
+    text(choices[1], "50pt Verdana", Color.BLACK, centerX, centerY+65);
+    text(choices[2], "50pt Verdana", Color.BLACK, centerX+100, centerY+65);
+        setTimeout(function() {
+        choosingTime(ansInx);
+        }, 500)
+}
+
+
+// if user chooses the right answer, it brings them to the winner screen.
+// if user chooses the wrong answer, it brings them to the loser screen.
+// if user types an answer other than 1, 2, or 3, they are asked to try choosing again.
+
+function choosingTime(ans){
+    var userAns = readInt("Which of these letters did you NOT see? 1, 2, or 3?");
+    while (userAns < 1 || userAns > 3){
+        var userAns = readInt("Your only options are 1, 2, or 3. Try again!");
+    }
+    if(userAns-1 == ans){
+        winnerScreen();
+    } else{
+        loserScreen();
+    }
+
+} 
+
+// ending screen if player DOES choose the right answer.
+function winnerScreen(){
+    drawBackground("#93DAA2");
+    text("YOU WERE", "bold 22pt Verdana", "#93DAA2", centerX-65, centerY);
+    text("RIGHT!", "bold 22pt Verdana", "#01DF61", centerX+93, centerY);
+    text(letters[0], "bold 20pt Verdana", "#93DAA2", centerX+30, centerY+175);
+    text(letters[1], "bold 20pt Verdana", "#93DAA2", centerX-125, centerY+135);
+    text(letters[2], "bold 20pt Verdana", "#93DAA2", centerX-96, centerY-160);
+    text(letters[3], "bold 20pt Verdana", "#93DAA2", centerX+15, centerY-95);
+    text(letters[4], "bold 20pt Verdana", "#93DAA2", centerX-35, centerY+65);
+    text(letters[5], "bold 20pt Verdana", "#93DAA2", centerX+120, centerY-145);
+    text(letters[6], "bold 20pt Verdana", "#93DAA2", centerX+110, centerY+90);
+    text(letters[7], "bold 20pt Verdana", "#93DAA2", centerX-145, centerY-80);
+}
+
+// ending screen if player does NOT choose the right answer.
+function loserScreen(){
+    drawBackground("#F41555");
+    var ansNum = ansInx + 1;
+    text("YOU WERE", "bold 22pt Verdana", "#93DAA2", centerX-75, centerY);
+    text("WRONG!", "bold 22pt Verdana", "#F41555", centerX+93, centerY);
+    text("it was " + ansNum, "bold 12pt Verdana", "#93DAA2", centerX-90, centerY-60);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX+30, centerY+175);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX-125, centerY+135);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX-96, centerY-160);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX+15, centerY-95);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX-35, centerY+65);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX+120, centerY-145);
+    text(missing, "bold 20pt Verdana", "#F41555", centerX+110, centerY+90);
+}
+
+
+// rectangle, circle, and text functions.
+  
+function rect(width, height, color, x, y){
+    var rect = new Rectangle(width, height);
+    rect.setColor(color);
+    rect.setPosition(x, y);
+    add(rect);
+}
+function text(text, font, color, x, y){
+    var txt = new Text(text, font);
+    txt.setPosition(x - txt.getWidth()/2, y);
+    txt.setColor(color);
+    add(txt);
+}
+function circle(radius, color, x, y){
+    var circle = new Circle(radius);
+    circle.setPosition(x, y);
+    circle.setColor(color);
+    add(circle);
+}
+
+
